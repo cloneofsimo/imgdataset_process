@@ -47,16 +47,15 @@ def initialize_model(hps_version: str = "v2.0") -> Tuple[torch.nn.Module, callab
 @torch.no_grad()
 def score_pair(model: torch.nn.Module, preprocess_val: callable, prompts_image_pairs: List[Tuple[Image.Image, str]]) -> List[float]:
     tokenizer = get_tokenizer('ViT-H-14')
-    results = []
     image_tensors = []
     texts = []
 
     for image, prompt in prompts_image_pairs:
         
             # Process the image
-        image_tensor = preprocess_val(image).unsqueeze(0).to(device=device, non_blocking=True)
+        image_tensor = preprocess_val(image).unsqueeze(0).to(device=device)
         # Process the prompt
-        text = tokenizer([prompt], context_length=77).to(device=device, non_blocking=True)
+        text = tokenizer([prompt], context_length=77).to(device=device)
             # Calculate the HPS
         image_tensors.append(image_tensor)
         texts.append(text)

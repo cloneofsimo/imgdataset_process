@@ -146,10 +146,12 @@ def convert_to_mds(dataset_paths, out_roots, device, is_test=False):
         if i > 10:
             break
 
+    num_chunk = 8
+
     dataset_bulks = [
-        dataset_paths[i : i + 8] for i in range(0, len(dataset_paths), 8)
+        dataset_paths[i : i + num_chunk] for i in range(0, len(dataset_paths), num_chunk)
     ]
-    out_roots_bulks = [out_roots[i : i + 8] for i in range(0, len(out_roots), 8)]
+    out_roots_bulks = [out_roots[i : i + num_chunk] for i in range(0, len(out_roots), num_chunk)]
 
     for dataset_paths, out_roots in zip(dataset_bulks, out_roots_bulks):
 
@@ -173,12 +175,10 @@ def convert_to_mds(dataset_paths, out_roots, device, is_test=False):
         dataloader = DataLoader(
             dataset,
             batch_size=None,
-            num_workers=24,
-            prefetch_factor=2,
+            num_workers=8,
+            prefetch_factor=4,
             shuffle=False,
             drop_last=False,
-            timeout=120,
-            collate_fn=lambda x: x,
         )
 
         t0 = time.time()
@@ -242,7 +242,7 @@ def convert_to_mds(dataset_paths, out_roots, device, is_test=False):
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
-                    max_length=128,
+                    max_length=256,
                 )
                 t5_inputs = {k: v.to(device) for k, v in t5_inputs.items()}
                 t5_outputs = t5model.encoder(**t5_inputs)[0]

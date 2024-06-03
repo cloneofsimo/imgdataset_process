@@ -1,14 +1,19 @@
 NUM_GPUS=8
 START_INDEX=0
 END_INDEX=7
+NUM_CPUS=$(nproc)  # Get the number of available CPUs
+CORES_PER_PROCESS=24
+echo "Number of GPUs: $NUM_GPUS | Number of CPUs: $NUM_CPUS | Cores per process: $CORES_PER_PROCESS"
 
 for ((i=START_INDEX; i<=END_INDEX; i++)); do
 
     GPU_INDEX=$((i % NUM_GPUS))
+    CPU_START=$(( (i * CORES_PER_PROCESS) % NUM_CPUS ))
+    CPU_END=$(( CPU_START + CORES_PER_PROCESS - 1 ))
 
-    CUDA_VISIBLE_DEVICES=$GPU_INDEX python run_featgen.py --device cuda --file_index $i &
-
-    if [ $((i % NUM_GPUS)) -eq $((NUM_GPUS - 1)) ]; then
-        wait
-    fi
+    export CUDA_VISIBLE_DEVICES=$GPU_INDEX
+    taskset -c $CPU_START-$CPU_END python run_featgen.py --device cuda --file_index $i &
+    echo "Started process $i on GPU $GPU_INDEX with CPU $CPU_START-$CPU_END"
 done
+
+wait  # Wait for all background processes to finish
